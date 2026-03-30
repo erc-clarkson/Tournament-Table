@@ -33,7 +33,7 @@ const COLS: { key: keyof Omit<Team, "Position" | "Club">; label: string }[] = [
 // Append the first col again at the end so the peek never shows blank
 const DISPLAY_COLS = [...COLS];
 
-const COL_WIDTH = 140;
+const COL_WIDTH = 135;
 const CLUB_WIDTH = 144;
 
 function formatVal(
@@ -170,9 +170,6 @@ export default function StickyTable() {
                   className="shrink-0 px-4 py-4 text-sm border-r border-gray-200 flex items-center gap-2 bg-white"
                   style={{ width: CLUB_WIDTH }}
                 >
-                  <span className="text-gray-400 text-xs w-4 text-right shrink-0">
-                    {team.Position}
-                  </span>
                   <span className="font-normal text-gray-900">{team.Club}</span>
                 </div>
 
