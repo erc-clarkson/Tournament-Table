@@ -1,4 +1,4 @@
-import data from "../data/data.json";
+import data from "./data/data.json";
 
 const resultStyle: Record<string, string> = {
   Win: "bg-green-100 text-green-800",

@@ -1,4 +1,4 @@
-import LeagueTable from "./components/league-table";
+import LeagueTable from "./league-table";
 
 export default function Page() {
   return (
