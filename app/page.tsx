@@ -1,6 +1,9 @@
-import data from "./data/data.json";
+import LeagueTable from "./components/league-table";
 
 export default function Page() {
-  console.log(data);
-  return <main>page</main>;
+  return (
+    <main>
+      <LeagueTable />
+    </main>
+  );
 }
