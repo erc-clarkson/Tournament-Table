@@ -1,6 +1,7 @@
 "use client";
 import { useRef, useState, useCallback } from "react";
 import data from "../data/data.json";
+import Badges from "./badges";
 
 type Team = {
   Position: number;
@@ -46,27 +47,27 @@ function formatVal(
   return `${val}`;
 }
 
-function Last5Badge({ value }: { value: string }) {
-  const results = value.split("\n");
-  return (
-    <div className="flex gap-0.5 justify-center">
-      {results.map((r, i) => (
-        <span
-          key={i}
-          className={`w-4 h-4 rounded-full text-[8px] font-bold flex items-center justify-center text-white ${
-            r === "Win"
-              ? "bg-green-500"
-              : r === "Draw"
-              ? "bg-gray-400"
-              : "bg-red-400"
-          }`}
-        >
-          {r[0]}
-        </span>
-      ))}
-    </div>
-  );
-}
+// function Last5Badge({ value }: { value: string }) {
+//   const results = value.split("\n");
+//   return (
+//     <div className="flex gap-0.5 justify-center">
+//       {results.map((r, i) => (
+//         <span
+//           key={i}
+//           className={`w-4 h-4 rounded-full text-[8px] font-bold flex items-center justify-center text-white ${
+//             r === "Win"
+//               ? "bg-green-500"
+//               : r === "Draw"
+//               ? "bg-gray-400"
+//               : "bg-red-400"
+//           }`}
+//         >
+//           {r[0]}
+//         </span>
+//       ))}
+//     </div>
+//   );
+// }
 
 export default function StickyTable() {
   const [activeCol, setActiveCol] = useState(0);
@@ -193,7 +194,7 @@ export default function StickyTable() {
                         style={{ width: COL_WIDTH }}
                       >
                         {col.key === "Last 5" ? (
-                          <Last5Badge value={raw as string} />
+                          <Badges value={raw as string} />
                         ) : (
                           formatVal(col.key, raw as number | string)
                         )}

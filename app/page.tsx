@@ -122,9 +122,13 @@ export default function Page() {
           <ul className="list-disc pl-5 space-y-1">
             <li>
               <span className="bg-yellow-200 px-1">
+                <code>layout.js</code>
+              </span>{" "}
+            </li>
+            <li>
+              <span className="bg-yellow-200 px-1">
                 <code>page.js</code>
               </span>{" "}
-              – main page
             </li>
             <li>
               <span className="bg-yellow-200 px-1">
@@ -134,7 +138,7 @@ export default function Page() {
             </li>
             <li>
               <span className="bg-yellow-200 px-1">
-                <code>last-5-badges.js</code>
+                <code>badges.js</code>
               </span>{" "}
               – reusable component
             </li>
