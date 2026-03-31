@@ -33,7 +33,7 @@ const COLS: { key: keyof Omit<Team, "Position" | "Club">; label: string }[] = [
 // Append the first col again at the end so the peek never shows blank
 const DISPLAY_COLS = [...COLS];
 
-const COL_WIDTH = 135;
+const COL_WIDTH = 134;
 const CLUB_WIDTH = 144;
 
 function formatVal(
@@ -126,8 +126,8 @@ export default function StickyTable() {
         .active-col-shadow { box-shadow: 4px 0 12px rgba(0,0,0,0.12); }
       `}</style>
 
-      <div className="bg-white min-h-screen font-sans select-none">
-        <div className="overflow-y-auto h-screen flex flex-col">
+      <div className="bg-white h-full max-h-screen font-sans select-none rounded-md ">
+        <div className="overflow-y-auto h-full max-h-screen flex flex-col rounded-md">
           {/* ── Sticky header ── */}
           <div className="sticky top-0 z-40 flex border-b border-gray-200 bg-white shrink-0">
             <div

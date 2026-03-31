@@ -1,4 +1,4 @@
-import data from "./data/data.json";
+import data from "../data/data.json";
 
 const resultStyle: Record<string, string> = {
   Win: "bg-green-100 text-green-800",
@@ -6,13 +6,13 @@ const resultStyle: Record<string, string> = {
   Loss: "bg-red-100 text-red-800",
 };
 
-export default function LeagueTable() {
+export default function LeagueTableInitial() {
   const columns = Object.keys(data?.[0])?.filter(
     (item) => item != "Position" && item != "Club"
   );
 
   return (
-    <div className="overflow-auto max-h-[600px] border border-gray-200 rounded-xl">
+    <div className="bg-white overflow-auto max-h-[600px] border border-gray-200 rounded-xl shadow-lg">
       <table className="border-collapse text-sm whitespace-nowrap border-separate">
         <thead>
           <tr>
