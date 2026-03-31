@@ -44,31 +44,37 @@ function formatVal(
 }
 
 export default function LeagueTable() {
-  const [activeCol, setActiveCol] = useState(0);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const snapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [activeCol, setActiveCol] = useState(0); //which column has the black banner
+  const scrollRef = useRef<HTMLDivElement>(null); //scroll ref for div
+  const snapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null); //holds id of setTimeout timer
 
   const onScroll = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
 
+    // Derive which column is closest to the current scroll position
+    // and clamp it so it never exceeds the last column index
     const idx = Math.min(
       Math.round(el.scrollLeft / COL_WIDTH),
       COLS.length - 1
     );
     setActiveCol(idx);
 
+    // Clear any previous snap timer so we only snap once the user - has stopped scrolling (debounced by 80ms)
     if (snapTimerRef.current) clearTimeout(snapTimerRef.current);
     snapTimerRef.current = setTimeout(() => {
+      // Re-calculate after the user stops — scrollLeft may have drifted
       const snapped = Math.min(
         Math.round(el.scrollLeft / COL_WIDTH),
         COLS.length - 1
       );
+      // Smoothly snap the scroll position to the nearest column boundary
       el.scrollTo({ left: snapped * COL_WIDTH, behavior: "smooth" });
       setActiveCol(snapped);
     }, 80);
   }, []);
 
+  // Programmatically jump to a column — used by header clicks and nav dots
   const scrollToCol = useCallback((idx: number) => {
     scrollRef.current?.scrollTo({ left: idx * COL_WIDTH, behavior: "smooth" });
     setActiveCol(idx);
@@ -90,13 +96,19 @@ export default function LeagueTable() {
         >
           <table
             className="border-collapse"
-            style={{ tableLayout: "fixed", minWidth: `${140 + COLS.length * COL_WIDTH}px` }}
+            style={{
+              tableLayout: "fixed",
+              minWidth: `${140 + COLS.length * COL_WIDTH}px`,
+            }}
           >
             {/* Col widths */}
             <colgroup>
               <col style={{ width: 140, minWidth: 140 }} />
               {COLS.map((_, i) => (
-                <col key={i} style={{ width: COL_WIDTH, minWidth: COL_WIDTH }} />
+                <col
+                  key={i}
+                  style={{ width: COL_WIDTH, minWidth: COL_WIDTH }}
+                />
               ))}
             </colgroup>
 
@@ -138,7 +150,9 @@ export default function LeagueTable() {
                     style={{ width: 140 }}
                   >
                     <div className="flex items-center gap-1">
-                      <span className="text-gray-400 text-xs">{team.Position}.</span>
+                      <span className="text-gray-400 text-xs">
+                        {team.Position}.
+                      </span>
                       <span className="text-sm text-gray-900">{team.Club}</span>
                     </div>
                   </td>
@@ -174,9 +188,7 @@ export default function LeagueTable() {
               key={i}
               onClick={() => scrollToCol(i)}
               className={`w-1.5 h-1.5 rounded-full transition-all duration-150 ${
-                activeCol === i
-                  ? "bg-gray-900 scale-125"
-                  : "bg-gray-300"
+                activeCol === i ? "bg-gray-900 scale-125" : "bg-gray-300"
               }`}
             />
           ))}
