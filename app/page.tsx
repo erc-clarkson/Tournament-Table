@@ -176,7 +176,7 @@ export default function Page() {
         </section>
       </section>
       <hr></hr>
-      <section className="space-y-4 text-sm leading-relaxed">
+      <section className="space-y-4">
         <h2 className="text-lg font-semibold">
           Potential Pitfalls / Edge Cases / if i had more time
         </h2>
