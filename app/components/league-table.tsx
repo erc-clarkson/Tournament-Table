@@ -31,9 +31,6 @@ const COLS: { key: keyof Omit<Team, "Position" | "Club">; label: string }[] = [
   { key: "Last 5", label: "Last 5" },
 ];
 
-// Append the first col again at the end so the peek never shows blank
-const DISPLAY_COLS = [...COLS];
-
 const COL_WIDTH = 134;
 const CLUB_WIDTH = 144;
 
@@ -47,70 +44,49 @@ function formatVal(
   return `${val}`;
 }
 
-// function Last5Badge({ value }: { value: string }) {
-//   const results = value.split("\n");
-//   return (
-//     <div className="flex gap-0.5 justify-center">
-//       {results.map((r, i) => (
-//         <span
-//           key={i}
-//           className={`w-4 h-4 rounded-full text-[8px] font-bold flex items-center justify-center text-white ${
-//             r === "Win"
-//               ? "bg-green-500"
-//               : r === "Draw"
-//               ? "bg-gray-400"
-//               : "bg-red-400"
-//           }`}
-//         >
-//           {r[0]}
-//         </span>
-//       ))}
-//     </div>
-//   );
-// }
-
-export default function StickyTable() {
-  const [activeCol, setActiveCol] = useState(0);
-  const scrollEls = useRef<(HTMLDivElement | null)[]>([]);
-  const isSyncing = useRef(false);
+export default function LeagueTable() {
+  const [activeCol, setActiveCol] = useState(0); //the active column
+  const scrollEls = useRef<(HTMLDivElement | null)[]>([]); //holds a ref to every scrollable row div (header + each team row)
+  const isSyncing = useRef(false); //A guard flag to prevent an infinite loop when scrolling between the rows
   const snapTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const onScroll = useCallback((sourceIdx: number) => {
+    // Prevent infinite loop when we programmatically set scrollLeft on other rows
     if (isSyncing.current) return;
     isSyncing.current = true;
 
+    // Get the row that triggered the scroll
     const source = scrollEls.current[sourceIdx];
     if (!source) {
       isSyncing.current = false;
       return;
     }
 
+    // Sync all other rows to the same scroll position
     const left = source.scrollLeft;
-
     scrollEls.current.forEach((el, i) => {
       if (i !== sourceIdx && el) el.scrollLeft = left;
     });
 
-    // Active col — the duplicate at COLS.length maps back to 0
-    const rawIdx = Math.round(left / COL_WIDTH);
-    setActiveCol(rawIdx >= COLS.length ? 0 : rawIdx);
-
+    // Update the active (highlighted) column based on current position
+    setActiveCol(Math.round(left / COL_WIDTH));
     isSyncing.current = false;
 
+    // Snap to the nearest column after the user stops scrolling
     if (snapTimeoutRef.current) clearTimeout(snapTimeoutRef.current);
     snapTimeoutRef.current = setTimeout(() => {
-      const currentLeft = source.scrollLeft;
-      // Allow scrolling to the duplicate col so the peek is always filled
-      const rawSnapped = Math.round(currentLeft / COL_WIDTH);
-      const clamped = Math.min(rawSnapped, COLS.length); // allow one past end
-      const snapLeft = clamped * COL_WIDTH;
+      const snapped = Math.min(
+        Math.round(source.scrollLeft / COL_WIDTH),
+        COLS.length - 1
+      );
       scrollEls.current.forEach((el) => {
-        if (el) el.scrollTo({ left: snapLeft, behavior: "smooth" });
+        if (el) el.scrollTo({ left: snapped * COL_WIDTH, behavior: "smooth" });
       });
-      setActiveCol(clamped >= COLS.length ? 0 : clamped);
+      setActiveCol(snapped);
     }, 80);
   }, []);
 
+  // Store a ref to each scrollable row div by index
   const registerEl = (idx: number) => (el: HTMLDivElement | null) => {
     scrollEls.current[idx] = el;
   };
@@ -118,37 +94,32 @@ export default function StickyTable() {
   return (
     <>
       <style>{`
-        .scroll-x {
-          overflow-x: scroll;
-          -webkit-overflow-scrolling: touch;
-          scrollbar-width: none;
-        }
+        .scroll-x { overflow-x: scroll; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
         .scroll-x::-webkit-scrollbar { display: none; }
         .active-col-shadow { box-shadow: 4px 0 12px rgba(0,0,0,0.12); }
       `}</style>
 
-      <div className="bg-white h-full max-h-screen font-sans select-none rounded-md ">
-        <div className="overflow-y-auto h-full max-h-screen flex flex-col rounded-md">
-          {/* ── Sticky header ── */}
+      <div className="bg-white h-full font-sans select-none rounded-md">
+        <div className="overflow-y-auto h-full flex flex-col rounded-md">
+          {/* Sticky header */}
           <div className="sticky top-0 z-40 flex border-b border-gray-200 bg-white shrink-0">
             <div
-              className="shrink-0 px-4 py-4 text-sm font-normal text-gray-900 border-r border-gray-200 bg-white"
+              className="shrink-0 px-4 py-4 text-sm font-normal text-gray-900 border-r border-gray-200"
               style={{ width: CLUB_WIDTH }}
             >
               Club
             </div>
-
             <div
               ref={registerEl(0)}
               className="scroll-x flex"
               onScroll={() => onScroll(0)}
               style={{ flex: 1 }}
             >
-              {DISPLAY_COLS.map((col, i) => (
+              {COLS.map((col, i) => (
                 <div
                   key={i}
                   className={`shrink-0 flex items-center justify-center py-4 text-sm font-bold whitespace-nowrap transition-colors duration-200 ${
-                    activeCol === i || (i === COLS.length && activeCol === 0)
+                    activeCol === i
                       ? "bg-gray-900 text-white active-col-shadow"
                       : "bg-white text-gray-400"
                   }`}
@@ -160,7 +131,7 @@ export default function StickyTable() {
             </div>
           </div>
 
-          {/* ── Body rows ── */}
+          {/* Body rows */}
           <div className="flex-1">
             {TEAMS.map((team, rowIdx) => (
               <div
@@ -168,26 +139,24 @@ export default function StickyTable() {
                 className="flex border-b border-gray-100"
               >
                 <div
-                  className="shrink-0 px-4 py-4 text-sm border-r border-gray-200 flex items-center gap-2 bg-white"
+                  className="shrink-0 px-4 py-4 text-sm border-r border-gray-200 flex items-center bg-white"
                   style={{ width: CLUB_WIDTH }}
                 >
                   <span className="font-normal text-gray-900">{team.Club}</span>
                 </div>
-
                 <div
                   ref={registerEl(rowIdx + 1)}
                   className="scroll-x flex"
                   onScroll={() => onScroll(rowIdx + 1)}
                   style={{ flex: 1 }}
                 >
-                  {DISPLAY_COLS.map((col, i) => {
+                  {COLS.map((col, i) => {
                     const raw = team[col.key];
-                    const isActive = activeCol === i && i < COLS.length;
                     return (
                       <div
                         key={i}
                         className={`shrink-0 flex items-center justify-center py-4 text-sm font-bold transition-colors duration-200 ${
-                          isActive
+                          activeCol === i
                             ? "text-gray-900 active-col-shadow"
                             : "text-gray-300"
                         }`}
