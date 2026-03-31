@@ -21,3 +21,4 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+Or view the project here [https://tournament-table-wheat.vercel.app/](https://tournament-table-wheat.vercel.app/)
