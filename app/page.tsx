@@ -113,6 +113,10 @@ export default function Page() {
               Added scroll effects to create the perception that the content
               moves independently, rather than the whole page scrolling.
             </li>
+            <li>
+              Added dots to give suggestion of a component that is horizontally
+              scrollable.
+            </li>
           </ul>
         </section>
 
@@ -196,10 +200,6 @@ export default function Page() {
           <li>
             If the table data comes from an API, care must be taken to prevent
             the table from “jumping” or losing position when the data refreshes.
-          </li>
-          <li>
-            Would add "left" and "right" chevron buttons so people could access across the table via clicking. Also is a good visual indication
-            of scroll effect.
           </li>
         </ul>
       </section>
