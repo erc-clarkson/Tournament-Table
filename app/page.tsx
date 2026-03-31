@@ -198,8 +198,7 @@ export default function Page() {
             the table from “jumping” or losing position when the data refreshes.
           </li>
           <li>
-            Would add "left" and "right" chevron buttons so people could access
-            the across the table via clicking. Also is a good visual indication
+            Would add "left" and "right" chevron buttons so people could access across the table via clicking. Also is a good visual indication
             of scroll effect.
           </li>
         </ul>
