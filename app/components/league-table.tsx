@@ -24,15 +24,14 @@ const COLS: { key: keyof Omit<Team, "Position" | "Club">; label: string }[] = [
   { key: "Wins", label: "Wins" },
   { key: "Draws", label: "Draws" },
   { key: "Losses", label: "Losses" },
-  { key: "Matches played", label: "Matches played" },
-  { key: "Goals scored", label: "Goals scored" },
-  { key: "Goals against", label: "Goals against" },
-  { key: "Goal difference", label: "Goal difference" },
+  { key: "Matches played", label: "Played" },
+  { key: "Goals scored", label: "GF" },
+  { key: "Goals against", label: "GA" },
+  { key: "Goal difference", label: "GD" },
   { key: "Last 5", label: "Last 5" },
 ];
 
-const COL_WIDTH = 130;
-const CLUB_WIDTH = 140;
+const COL_WIDTH = 120;
 
 function formatVal(
   key: keyof Omit<Team, "Position" | "Club">,
@@ -45,136 +44,142 @@ function formatVal(
 }
 
 export default function LeagueTable() {
-  const [activeCol, setActiveCol] = useState(0); //the active column
-  const scrollEls = useRef<(HTMLDivElement | null)[]>([]); //holds a ref to every scrollable row div (header + each team row)
-  const isSyncing = useRef(false); //A guard flag to prevent an infinite loop when scrolling between the rows
-  const snapTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [activeCol, setActiveCol] = useState(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const snapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const onScroll = useCallback((sourceIdx: number) => {
-    // Prevent infinite loop when we programmatically set scrollLeft on other rows
-    if (isSyncing.current) return;
-    isSyncing.current = true;
+  const onScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
 
-    // Get the row that triggered the scroll
-    const source = scrollEls.current[sourceIdx];
-    if (!source) {
-      isSyncing.current = false;
-      return;
-    }
+    const idx = Math.min(
+      Math.round(el.scrollLeft / COL_WIDTH),
+      COLS.length - 1
+    );
+    setActiveCol(idx);
 
-    // Sync all other rows to the same scroll position
-    const left = source.scrollLeft;
-    scrollEls.current.forEach((el, i) => {
-      if (i !== sourceIdx && el) el.scrollLeft = left;
-    });
-
-    // Update the active (highlighted) column based on current position
-    setActiveCol(Math.round(left / COL_WIDTH));
-    isSyncing.current = false;
-
-    // Snap to the nearest column after the user stops scrolling
-    if (snapTimeoutRef.current) clearTimeout(snapTimeoutRef.current);
-    snapTimeoutRef.current = setTimeout(() => {
+    if (snapTimerRef.current) clearTimeout(snapTimerRef.current);
+    snapTimerRef.current = setTimeout(() => {
       const snapped = Math.min(
-        Math.round(source.scrollLeft / COL_WIDTH),
+        Math.round(el.scrollLeft / COL_WIDTH),
         COLS.length - 1
       );
-      scrollEls.current.forEach((el) => {
-        if (el) el.scrollTo({ left: snapped * COL_WIDTH, behavior: "smooth" });
-      });
+      el.scrollTo({ left: snapped * COL_WIDTH, behavior: "smooth" });
       setActiveCol(snapped);
     }, 80);
   }, []);
 
-  // Store a ref to each scrollable row div by index
-  const registerEl = (idx: number) => (el: HTMLDivElement | null) => {
-    scrollEls.current[idx] = el;
-  };
+  const scrollToCol = useCallback((idx: number) => {
+    scrollRef.current?.scrollTo({ left: idx * COL_WIDTH, behavior: "smooth" });
+    setActiveCol(idx);
+  }, []);
 
   return (
     <>
       <style>{`
-        .scroll-x { overflow-x: scroll; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-        .scroll-x::-webkit-scrollbar { display: none; }
-        .active-col-shadow { box-shadow: 4px 0 12px rgba(0,0,0,0.12); }
+        .lt-scroll { overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+        .lt-scroll::-webkit-scrollbar { display: none; }
       `}</style>
 
-      <div className="bg-white h-full font-sans select-none rounded-md">
-        <div className="overflow-y-auto h-full flex flex-col rounded-md">
-          {/* Sticky header */}
-          <div className="sticky top-0 z-40 flex border-b border-gray-200 bg-white shrink-0">
-            <div
-              className="shrink-0 px-4 py-4 text-sm font-normal text-gray-900 border-r border-gray-200"
-              style={{ width: CLUB_WIDTH }}
-            >
-              Club
-            </div>
-            <div
-              ref={registerEl(0)}
-              className="scroll-x flex"
-              onScroll={() => onScroll(0)}
-              style={{ flex: 1 }}
-            >
-              {COLS.map((col, i) => (
-                <div
-                  key={i}
-                  className={`shrink-0 flex items-center justify-center py-4 text-sm font-bold whitespace-nowrap transition-colors duration-200 ${
-                    activeCol === i
-                      ? "bg-gray-900 text-white active-col-shadow"
-                      : "bg-white text-gray-400"
-                  }`}
-                  style={{ width: COL_WIDTH }}
-                >
-                  {col.label}
-                </div>
+      <div className="bg-white h-full font-sans select-none rounded-md flex flex-col">
+        {/* Scrollable table */}
+        <div
+          ref={scrollRef}
+          className="lt-scroll flex-1 overflow-y-auto"
+          onScroll={onScroll}
+        >
+          <table
+            className="border-collapse"
+            style={{ tableLayout: "fixed", minWidth: `${140 + COLS.length * COL_WIDTH}px` }}
+          >
+            {/* Col widths */}
+            <colgroup>
+              <col style={{ width: 140, minWidth: 140 }} />
+              {COLS.map((_, i) => (
+                <col key={i} style={{ width: COL_WIDTH, minWidth: COL_WIDTH }} />
               ))}
-            </div>
-          </div>
+            </colgroup>
 
-          {/* Body rows */}
-          <div className="flex-1">
-            {TEAMS.map((team, rowIdx) => (
-              <div
-                key={team.Position}
-                className="flex border-b border-gray-100"
-              >
-                <div
-                  className="shrink-0 px-4 py-4 gap-1 text-sm border-r border-gray-200 flex items-center bg-white"
-                  style={{ width: CLUB_WIDTH }}
+            {/* Header */}
+            <thead>
+              <tr className="border-b border-gray-200">
+                {/* Sticky club column header */}
+                <th
+                  className="sticky left-0 top-0 z-30 bg-white border-r border-gray-200 text-left px-4 py-4 text-sm font-normal text-gray-900"
+                  style={{ width: 140 }}
                 >
-                  <p className="text-gray-400 text-xs">{team.Position}.</p>
-                  <p className="font-normal text-gray-900">{team.Club}</p>
-                </div>
-                <div
-                  ref={registerEl(rowIdx + 1)}
-                  className="scroll-x flex"
-                  onScroll={() => onScroll(rowIdx + 1)}
-                  style={{ flex: 1 }}
-                >
+                  Club
+                </th>
+
+                {/* Data column headers */}
+                {COLS.map((col, i) => (
+                  <th
+                    key={i}
+                    onClick={() => scrollToCol(i)}
+                    className={`sticky top-0 z-10 py-4 text-sm font-bold whitespace-nowrap text-center cursor-pointer transition-colors duration-200 ${
+                      activeCol === i
+                        ? "bg-gray-900 text-white"
+                        : "bg-white text-gray-400"
+                    }`}
+                  >
+                    {col.label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+
+            {/* Body */}
+            <tbody>
+              {TEAMS.map((team) => (
+                <tr key={team.Position} className="border-b border-gray-100">
+                  {/* Sticky club cell */}
+                  <td
+                    className="sticky left-0 z-10 bg-white border-r border-gray-200 px-4 py-4"
+                    style={{ width: 140 }}
+                  >
+                    <div className="flex items-center gap-1">
+                      <span className="text-gray-400 text-xs">{team.Position}.</span>
+                      <span className="text-sm text-gray-900">{team.Club}</span>
+                    </div>
+                  </td>
+
+                  {/* Data cells */}
                   {COLS.map((col, i) => {
                     const raw = team[col.key];
                     return (
-                      <div
+                      <td
                         key={i}
-                        className={`shrink-0 flex items-center justify-center py-4 text-sm font-bold transition-colors duration-200 ${
-                          activeCol === i
-                            ? "text-gray-900 active-col-shadow"
-                            : "text-gray-300"
+                        className={`py-4 text-sm font-bold text-center transition-colors duration-200 ${
+                          activeCol === i ? "text-gray-900" : "text-gray-300"
                         }`}
-                        style={{ width: COL_WIDTH }}
                       >
                         {col.key === "Last 5" ? (
                           <Badges value={raw as string} />
                         ) : (
                           formatVal(col.key, raw as number | string)
                         )}
-                      </div>
+                      </td>
                     );
                   })}
-                </div>
-              </div>
-            ))}
-          </div>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Column nav dots */}
+        <div className="flex justify-center gap-1.5 py-2.5 border-t border-gray-100 shrink-0">
+          {COLS.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => scrollToCol(i)}
+              className={`w-1.5 h-1.5 rounded-full transition-all duration-150 ${
+                activeCol === i
+                  ? "bg-gray-900 scale-125"
+                  : "bg-gray-300"
+              }`}
+            />
+          ))}
         </div>
       </div>
     </>
