@@ -31,8 +31,8 @@ const COLS: { key: keyof Omit<Team, "Position" | "Club">; label: string }[] = [
   { key: "Last 5", label: "Last 5" },
 ];
 
-const COL_WIDTH = 134;
-const CLUB_WIDTH = 144;
+const COL_WIDTH = 130;
+const CLUB_WIDTH = 140;
 
 function formatVal(
   key: keyof Omit<Team, "Position" | "Club">,
@@ -139,10 +139,11 @@ export default function LeagueTable() {
                 className="flex border-b border-gray-100"
               >
                 <div
-                  className="shrink-0 px-4 py-4 text-sm border-r border-gray-200 flex items-center bg-white"
+                  className="shrink-0 px-4 py-4 gap-1 text-sm border-r border-gray-200 flex items-center bg-white"
                   style={{ width: CLUB_WIDTH }}
                 >
-                  <span className="font-normal text-gray-900">{team.Club}</span>
+                  <p className="text-gray-400 text-xs">{team.Position}.</p>
+                  <p className="font-normal text-gray-900">{team.Club}</p>
                 </div>
                 <div
                   ref={registerEl(rowIdx + 1)}
